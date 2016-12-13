@@ -32,7 +32,7 @@ public static async Task<object> Run(HttpRequestMessage req, TraceWriter log)
         if (activity != null)
         {
             // Store Conversation for later use
-            StoreConversation(activity); 
+            StoreConversation(activity, log); 
             
             // one of these will have an interface and process it
             switch (activity.GetActivityType())
@@ -58,6 +58,11 @@ public static async Task<object> Run(HttpRequestMessage req, TraceWriter log)
                             await client.Conversations.ReplyToActivityAsync(reply);
                         }
                     }
+
+                    if (update.MembersRemoved.Where(t => t.Id == activity.Recipient.Id).Any())
+                    {
+                        RemoveConversation(activity, log);
+                    }
                     break;
                 case ActivityTypes.ContactRelationUpdate:
                 case ActivityTypes.Typing:
@@ -72,20 +77,36 @@ public static async Task<object> Run(HttpRequestMessage req, TraceWriter log)
     }    
 }
 
-private static void StoreConversation(Activity activity)
+private static void StoreConversation(Activity activity, TraceWriter log)
 {
     var homeFolder = Environment.GetEnvironmentVariable("HOME");
     var storageFolder = homeFolder + "\\data\\" + CleanFolderName(activity.Conversation.Id);
     if (!Directory.Exists(storageFolder))
     {
-        Directory.CreateDirectory(storageFolder);
-        var storageFile = storageFolder + "\\activity.json";
-        File.WriteAllText(storageFile, JsonConvert.SerializeObject(activity));
+        Directory.CreateDirectory(storageFolder, log);
+        File.WriteAllText(storageFolder + "\\serviceUrl.txt", activity.ServiceUrl);
+        File.WriteAllText(storageFolder + "\\user.json", JsonConvert.SerializeObject(activity.From));
+        File.WriteAllText(storageFolder + "\\bot.json", JsonConvert.SerializeObject(activity.Recipient));
+        File.WriteAllText(storageFolder + "\\conversation.json", JsonConvert.SerializeObject(activity.Conversation));
     }
 }
 
-private static string CleanFolderName(string foldername)
+private static void RemoveConversation(Activity activity, TraceWriter log)
 {
+    var homeFolder = Environment.GetEnvironmentVariable("HOME");
+    var storageFolder = homeFolder + "\\data\\" + CleanFolderName(activity.Conversation.Id);
+    if (Directory.Exists(storageFolder))
+    {
+        Directory.Delete(storageFolder, true);
+    }
+}
+
+private static string CleanFolderName(string foldername, TraceWriter log)
+{
+    log.Info("Cleaning filename");
+    log.Info("Before: " + foldername);
     var invalids = System.IO.Path.GetInvalidFileNameChars();
-    return String.Join("_", foldername.Split(invalids, StringSplitOptions.RemoveEmptyEntries) ).TrimEnd('.');
+    var newFolderName = String.Join("_", foldername.Split(invalids, StringSplitOptions.RemoveEmptyEntries) ).TrimEnd('.');
+    log.Info("After: " + newFoldername);
+    return newFolderName;
 }

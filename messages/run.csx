@@ -107,6 +107,6 @@ private static string CleanFolderName(string foldername, TraceWriter log)
     log.Info("Before: " + foldername);
     var invalids = System.IO.Path.GetInvalidFileNameChars();
     var newFolderName = String.Join("_", foldername.Split(invalids, StringSplitOptions.RemoveEmptyEntries) ).TrimEnd('.');
-    log.Info("After: " + newFoldername);
+    log.Info("After: " + newFolderName);
     return newFolderName;
 }

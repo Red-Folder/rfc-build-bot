@@ -83,7 +83,7 @@ private static void StoreConversation(Activity activity, TraceWriter log)
     var storageFolder = homeFolder + "\\data\\" + CleanFolderName(activity.Conversation.Id, log);
     if (!Directory.Exists(storageFolder))
     {
-        Directory.CreateDirectory(storageFolder, log);
+        Directory.CreateDirectory(storageFolder, true);
         File.WriteAllText(storageFolder + "\\serviceUrl.txt", activity.ServiceUrl);
         File.WriteAllText(storageFolder + "\\user.json", JsonConvert.SerializeObject(activity.From));
         File.WriteAllText(storageFolder + "\\bot.json", JsonConvert.SerializeObject(activity.Recipient));
@@ -94,7 +94,7 @@ private static void StoreConversation(Activity activity, TraceWriter log)
 private static void RemoveConversation(Activity activity, TraceWriter log)
 {
     var homeFolder = Environment.GetEnvironmentVariable("HOME");
-    var storageFolder = homeFolder + "\\data\\" + CleanFolderName(activity.Conversation.Id);
+    var storageFolder = homeFolder + "\\data\\" + CleanFolderName(activity.Conversation.Id, log);
     if (Directory.Exists(storageFolder))
     {
         Directory.Delete(storageFolder, true);

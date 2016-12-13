@@ -80,7 +80,7 @@ public static async Task<object> Run(HttpRequestMessage req, TraceWriter log)
 private static void StoreConversation(Activity activity, TraceWriter log)
 {
     var homeFolder = Environment.GetEnvironmentVariable("HOME");
-    var storageFolder = homeFolder + "\\data\\" + CleanFolderName(activity.Conversation.Id);
+    var storageFolder = homeFolder + "\\data\\" + CleanFolderName(activity.Conversation.Id, log);
     if (!Directory.Exists(storageFolder))
     {
         Directory.CreateDirectory(storageFolder, log);
